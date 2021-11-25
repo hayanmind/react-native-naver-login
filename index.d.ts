@@ -10,7 +10,8 @@ export interface NaverLoginAuthTokenInfo {
 }
 
 export interface NaverLogin {
-    login(options: NaverLoginOptions): Promise<NaverLoginAuthTokenInfo>;
+    initialize(options: NaverLoginOptions): void;
+    login(): Promise<NaverLoginAuthTokenInfo>;
     logout(): Promise<boolean>;
 }
 
