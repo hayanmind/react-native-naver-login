@@ -16,7 +16,7 @@ class NaverLoginModule(private val reactContext: ReactApplicationContext) : Reac
     }
 
     @ReactMethod
-    fun login(options: ReadableMap, promise: Promise) {
+    fun initialize(options: ReadableMap) {
         val connection = OAuthLogin.getInstance()
 
         connection.init(
@@ -25,6 +25,11 @@ class NaverLoginModule(private val reactContext: ReactApplicationContext) : Reac
                 options.getString("consumerSecret"),
                 options.getString("appName")
         )
+    }
+
+    @ReactMethod
+    fun login(promise: Promise) {
+        val connection = OAuthLogin.getInstance()
 
         reactContext.currentActivity!!.runOnUiThread {
             connection.startOauthLoginActivity(
@@ -37,8 +42,15 @@ class NaverLoginModule(private val reactContext: ReactApplicationContext) : Reac
     @ReactMethod
     fun logout(promise: Promise) {
         val connection = OAuthLogin.getInstance()
-        val result = connection.logoutAndDeleteToken(reactContext.applicationContext)
-        promise.resolve(result)
+        val isSuccessDeleteToken = connection.logoutAndDeleteToken(reactContext.applicationContext)
+
+        if (!isSuccessDeleteToken) {
+            val errorCode = connection.getLastErrorCode(reactContext.applicationContext).code;
+            val errorDesc = connection.getLastErrorDesc(reactContext.applicationContext);
+            promise.reject(errorCode, errorDesc);
+        } else {
+            promise.resolve(true);
+        }
     }
 }
 
