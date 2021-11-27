@@ -20,11 +20,6 @@ class NaverLogin: NSObject, RCTBridgeModule, NaverThirdPartyLoginConnectionDeleg
     @objc(initialize:)
     func initialize(options: Dictionary<String, String>) {
         if let connection = NaverThirdPartyLoginConnection.getSharedInstance() {
-            NSLog("KDH initialize");
-            
-            if let appName = options["appName"] {
-                NSLog(appName);
-            }
             connection.consumerKey = options["consumerKey"]
             connection.consumerSecret = options["consumerSecret"]
             connection.appName = options["appName"]
@@ -38,6 +33,8 @@ class NaverLogin: NSObject, RCTBridgeModule, NaverThirdPartyLoginConnectionDeleg
     func login(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         loginPromiseResolve = resolve
         loginPromiseReject = reject
+        logoutPromiseResolve = nil
+        logoutPromiseReject = nil
         
         if let connection = NaverThirdPartyLoginConnection.getSharedInstance() {
          
@@ -49,14 +46,12 @@ class NaverLogin: NSObject, RCTBridgeModule, NaverThirdPartyLoginConnectionDeleg
 
     @objc(logout:rejecter:)
     func logout(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-        NSLog("logout");
-        
+        loginPromiseResolve = nil
+        loginPromiseReject = nil
         logoutPromiseResolve = resolve
         logoutPromiseReject = reject
         
         if let connection = NaverThirdPartyLoginConnection.getSharedInstance() {
-            NSLog("hi");
-            
             DispatchQueue.main.async {
                 connection.requestDeleteToken()
             }
@@ -76,24 +71,20 @@ class NaverLogin: NSObject, RCTBridgeModule, NaverThirdPartyLoginConnectionDeleg
     }
     
     func oauth20ConnectionDidFinishDeleteToken() {
-        NSLog("oauth20ConnectionDidFinishDeleteToken");
         if let resolve = logoutPromiseResolve {
             resolve(true)
         }
     }
     
     func oauth20Connection(_ oauthConnection: NaverThirdPartyLoginConnection!, didFailWithError error: Error!) {
-        NSLog("didFailWithError %@", error.localizedDescription);
         if let reject = loginPromiseReject {
             reject("E_UNKNOWN", error.localizedDescription, error)
         }
     }
     
     func oauth20Connection(_ oauthConnection: NaverThirdPartyLoginConnection!, didFailAuthorizationWithRecieveType recieveType:THIRDPARTYLOGIN_RECEIVE_TYPE) {
-        NSLog("Nearo didFailAuthorizationWithRecieveType");
         if let reject = loginPromiseReject {
             let errorMessage = String(format: "Error Code: %@", convertReceiveTypeToString(recieveType: recieveType));
-            NSLog(errorMessage);
             if recieveType == CANCELBYUSER {
                 reject("E_CANCELLED", errorMessage, nil);
             } else {
@@ -103,7 +94,6 @@ class NaverLogin: NSObject, RCTBridgeModule, NaverThirdPartyLoginConnectionDeleg
         
         if let reject = logoutPromiseReject {
             let errorMessage = String(format: "Error Code: %@", convertReceiveTypeToString(recieveType: recieveType));
-            NSLog(errorMessage);
             if recieveType == CANCELBYUSER {
                 reject("E_CANCELLED", errorMessage, nil);
             } else {
