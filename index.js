@@ -1,16 +1,21 @@
-import {NativeModules} from "react-native";
+import { NativeModules } from "react-native";
 
-const {NaverLogin} = NativeModules;
+const { NaverLogin } = NativeModules;
 
-async function login(options): Promise<NaverLoginAuthTokenInfo> {
-  return await NaverLogin.login(options);
+function initialize(options) {
+  NaverLogin.initialize(options);
 }
 
-async function logout(): Promise<boolean> {
-  return await NaverLogin.logout();
+function login() {
+  return NaverLogin.login();
+}
+
+function logout() {
+  return NaverLogin.logout();
 }
 
 export default {
+  initialize,
   login,
   logout,
 };
